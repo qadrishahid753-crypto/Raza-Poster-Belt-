@@ -170,6 +170,24 @@ body.order-popup-open{overflow:hidden}
 }
 </script>
 
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '2414291209339091');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=2414291209339091&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
+
 </head>
 <body>
 <div class="topbar">
@@ -385,6 +403,15 @@ function showThankYou(order){
   processingScreen.setAttribute('aria-hidden','true');
   thankYouScreen.classList.add('show');
   thankYouScreen.setAttribute('aria-hidden','false');
+
+  // Meta Pixel Purchase: fire once per completed thank-you flow.
+  if (typeof fbq === 'function' && !window.__vipStorePurchaseTracked) {
+    window.__vipStorePurchaseTracked = true;
+    fbq('track', 'Purchase', {
+      value: Number(order.total) || 1100,
+      currency: 'PKR'
+    });
+  }
 }
 let orderSubmissionInProgress = false;
 orderForm.addEventListener('submit',e=>{
