@@ -298,6 +298,7 @@ body.order-popup-open{overflow:hidden}
 <div class="sticky-buy"><div><strong>Rs. 900</strong><small>+ Rs. 200 delivery</small></div><a class="btn btn-primary" href="#order">ORDER NOW →</a></div>
 
 
+<iframe name="googleSheetsOrderFrame" id="googleSheetsOrderFrame" title="Order submission" style="display:none;width:0;height:0;border:0"></iframe>
 <div id="processingScreen" aria-live="assertive" aria-hidden="true">
   <div class="status-card">
     <div class="spinner" aria-hidden="true"></div>
@@ -329,6 +330,7 @@ body.order-popup-open{overflow:hidden}
 
 <script>
 const PRICE=900, DELIVERY=200;
+const GOOGLE_SHEETS_WEB_APP_URL='https://script.google.com/macros/s/AKfycbydQgQnUM_ZS55iaCtJhEWSVMvTj0K4V025q4Pc04GEfDN9pMh6JluJ1Agt4lRCubFCcA/exec';
 let quantity=1;
 const qtyOut=document.getElementById('qty');
 function updateTotals(){
@@ -384,9 +386,17 @@ function showThankYou(order){
   thankYouScreen.classList.add('show');
   thankYouScreen.setAttribute('aria-hidden','false');
 }
+let orderSubmissionInProgress = false;
 orderForm.addEventListener('submit',e=>{
   e.preventDefault();
+  if(orderSubmissionInProgress) return;
   if(!orderForm.reportValidity()) return;
+
+  if(!GOOGLE_SHEETS_WEB_APP_URL || GOOGLE_SHEETS_WEB_APP_URL.includes('PASTE_YOUR_')) {
+    alert('Google Sheets connection is not finished yet. Add your deployed Apps Script Web App URL first.');
+    return;
+  }
+
   const data=new FormData(orderForm);
   const order={
     name:String(data.get('name')).trim(),
@@ -397,15 +407,41 @@ orderForm.addEventListener('submit',e=>{
     quantity:Number(data.get('quantity'))||1,
     total:PRICE*(Number(data.get('quantity'))||1)+DELIVERY
   };
-  // Show a full-screen processing state for exactly two seconds.
+
+  orderSubmissionInProgress=true;
   processingScreen.classList.add('show');
   processingScreen.setAttribute('aria-hidden','false');
   const submitButton=orderForm.querySelector('button[type="submit"]');
   submitButton.disabled=true;
   submitButton.textContent='⏳ ORDER PROCESSING...';
-  window.setTimeout(()=>showThankYou(order),2000);
+
+  // Submit as a normal URL-encoded form to Apps Script via a hidden iframe.
+  // This avoids browser CORS/preflight issues with cross-origin JSON fetch.
+  const postForm=document.createElement('form');
+  postForm.method='POST';
+  postForm.action=GOOGLE_SHEETS_WEB_APP_URL;
+  postForm.target='googleSheetsOrderFrame';
+  postForm.acceptCharset='UTF-8';
+  Object.entries(order).forEach(([key,value])=>{
+    const input=document.createElement('input');
+    input.type='hidden';
+    input.name=key;
+    input.value=String(value);
+    postForm.appendChild(input);
+  });
+  document.body.appendChild(postForm);
+  postForm.submit();
+  postForm.remove();
+
+  // Apps Script runs the write on the server. The thank-you screen is shown
+  // after the short processing interval; verify the sheet row during setup.
+  window.setTimeout(()=>{
+    showThankYou(order);
+    orderSubmissionInProgress=false;
+  },2000);
 });
 document.getElementById('backToStore').addEventListener('click',()=>{
+  orderSubmissionInProgress=false;
   thankYouScreen.classList.remove('show');
   thankYouScreen.setAttribute('aria-hidden','true');
   orderForm.reset();
