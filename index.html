@@ -306,6 +306,8 @@ src="https://www.facebook.com/tr?id=2414291209339091&ev=PageView&noscript=1"
 <div class="field"><label for="address">Complete Delivery Address *</label><textarea id="address" name="address" placeholder="House number, street, area, landmark" autocomplete="street-address" minlength="8" maxlength="250" required></textarea></div>
 <div class="field"><label for="nearestPlace">NEAREST PLACE / NEARBY LOCATION *</label><input id="nearestPlace" name="nearestPlace" type="text" placeholder="e.g. Near main market, school, mosque, petrol pump" minlength="3" maxlength="150" required></div>
 <div class="field"><label for="quantity">Quantity</label><select id="quantity" name="quantity"><option value="1">1 Piece</option><option value="2">2 Pieces</option><option value="3">3 Pieces</option><option value="4">4 Pieces</option></select></div>
+<div class="summary-line"><span>Product Price</span><b id="formProductPrice">Rs. 900</b></div>
+<div class="summary-line"><span>Delivery Charges</span><b id="formDeliveryCharges">Rs. 200</b></div>
 <div class="form-total"><span>Total Amount</span><strong id="formTotal">Rs. 1,100</strong></div>
 <button class="btn submit" type="submit">CONFIRM ORDER →</button>
 <div class="fineprint">Demo checkout: this page displays the order confirmation locally but does not send orders to the store. Connect a verified WhatsApp number, Google Sheet, or order-management service before accepting live orders.</div>
@@ -356,6 +358,8 @@ function updateTotals(){
   qtyOut.textContent=quantity;
   document.getElementById('summaryQty').textContent=quantity;
   document.getElementById('summaryTotal').textContent='Rs. '+total.toLocaleString('en-PK');
+  document.getElementById('formProductPrice').textContent='Rs. '+(PRICE*quantity).toLocaleString('en-PK');
+  document.getElementById('formDeliveryCharges').textContent='Rs. '+DELIVERY.toLocaleString('en-PK');
   document.getElementById('formTotal').textContent='Rs. '+total.toLocaleString('en-PK');
   document.getElementById('quantity').value=String(quantity);
 }
